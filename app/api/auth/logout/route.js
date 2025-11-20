@@ -1,6 +1,5 @@
 export const runtime = "nodejs";
 
-import { getAuth } from "@/lib/firebaseAdmin";
 import { NextResponse } from "next/server";
 
 export async function POST(req) {

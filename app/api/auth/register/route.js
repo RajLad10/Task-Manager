@@ -1,8 +1,13 @@
-
 export const runtime = "nodejs";
+
 import { signUpWithEmailAndPassword } from "@/lib/firebaseClient";
 import { NextResponse } from "next/server";
 import { getAuth } from "@/lib/firebaseAdmin";
+
+console.log("LOGIN ENV:", {
+  FIREBASE_API_KEY: process.env.FIREBASE_API_KEY,
+  AUTH_DOMAIN: process.env.FIREBASE_AUTH_DOMAIN,
+});
 
 export async function POST(req) {
     try {
