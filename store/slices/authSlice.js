@@ -3,50 +3,56 @@ import axios from "axios";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
-export const registerUser = createAsyncThunk("auth/register", 
-    async ({payload, cb}) => {
-    try{
-        const response = await axios.post(`${BASE_URL}/api/auth/register`, payload);
-        if(response.status === 200){
-            cb();
+export const registerUser = createAsyncThunk("auth/register",
+    async ({ payload, cb }) => {
+        try {
+            const response = await axios.post(`${BASE_URL}/api/auth/register`, payload);
+            if (response.status === 200) {
+                cb();
+            }
+            return response.data;
         }
-        return response.data;
-    }
-    catch(error){
-        console.log("registerUser error", error);
-        return error;
-    }
-});
+        catch (error) {
+            console.log("registerUser error", error);
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || { error: "Registration failed" }
+            );
+        }
+    });
 
-export const loginUser = createAsyncThunk("auth/login", 
-    async ({payload, cb}) => {
-    try{
-        const response = await axios.post(`${BASE_URL}/api/auth/login`, payload);
-        if(response.status === 200){
-            cb();
+export const loginUser = createAsyncThunk("auth/login",
+    async ({ payload, cb }, thunkAPI) => {
+        try {
+            const response = await axios.post(`${BASE_URL}/api/auth/login`, payload);
+            if (response.status === 200) {
+                cb();
+            }
+            return response.data;
         }
-        return response.data;
-    }
-    catch(error){
-        console.log("loginUser error", error);
-        return error;
-    }
-});
+        catch (error) {
+            console.log("loginUser error", error);
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || { error: "Login failed" }
+            );
+        }
+    });
 
-export const logoutUser = createAsyncThunk("auth/logout", 
-    async ({ cb }) => {
-    try{
-        const response = await axios.post(`${BASE_URL}/api/auth/logout`);
-        if(response.status === 200){
-            cb();
+export const logoutUser = createAsyncThunk("auth/logout",
+    async ({ cb }, thunkAPI) => {
+        try {
+            const response = await axios.post(`${BASE_URL}/api/auth/logout`);
+            if (response.status === 200) {
+                cb();
+            }
+            return response.data;
         }
-        return response.data;
-    }
-    catch(error){
-        console.log("logoutUser error", error);
-        return error;
-    }
-});
+        catch (error) {
+            console.log("logoutUser error", error);
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || { error: "Logout failed" }
+            );
+        }
+    });
 
 const authSlice = createSlice({
     name: "auth",

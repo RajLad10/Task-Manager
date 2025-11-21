@@ -1,139 +1,196 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React from "react";
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Snackbar,
+  Alert,
+  CircularProgress,
+} from "@mui/material";
 import Link from "next/link";
-
-import { Formik } from "formik";
+import { useRouter } from "next/navigation";
 import * as Yup from "yup";
-
-import { Box, TextField, Button, Typography, CircularProgress } from "@mui/material";
+import { Formik } from "formik";
 import { useDispatch } from "react-redux";
 import { registerUser } from "@/store/slices/authSlice";
 
 export default function RegisterPage() {
-    const router = useRouter();
-    const dispatch = useDispatch();
+  const router = useRouter();
+  const dispatch = useDispatch();
 
-    const initialValues = {
-        email: "",
-        password: "",
-        confirmPassword: "",
-    };
+  const [toast, setToast] = React.useState({
+    open: false,
+    message: "",
+    type: "error",
+  });
 
-    const validationSchema = Yup.object().shape({
-        email: Yup.string().email("Invalid email").required("Email is required"),
-        password: Yup.string()
-            .min(6, "Password must be at least 6 characters")
-            .required("Password is required"),
-        confirmPassword: Yup.string()
-            .oneOf([Yup.ref("password"), null], "Passwords must match")
-            .required("Confirm password required"),
-    });
+  const showToast = (message, type = "error") =>
+    setToast({ open: true, message, type });
 
-    async function handleSubmit(values, { setSubmitting }) {
-        try {
-            setSubmitting(true);
-            dispatch(registerUser({
-                payload: {
-                    email: values.email,
-                    password: values.password,
-                },
-                cb: (res) => {
-                    setSubmitting(false);
-                    router.replace("/login");
-                }
-            }));
-        } catch (err) {
-            console.error("Register error:", err);
+  const initialValues = {
+    email: "",
+    password: "",
+    confirmPassword: "",
+  };
+
+  const validationSchema = Yup.object().shape({
+    email: Yup.string().email("Invalid email").required("Email is required"),
+    password: Yup.string()
+      .min(6, "Password must be at least 6 characters")
+      .required("Password is required"),
+    confirmPassword: Yup.string()
+      .oneOf([Yup.ref("password"), null], "Passwords must match")
+      .required("Confirm password required"),
+  });
+
+  const handleSubmit = async (values, { setSubmitting }) => {
+    try {
+      setSubmitting(true);
+
+      dispatch(
+        registerUser({
+          payload: {
+            email: values.email,
+            password: values.password,
+          },
+          cb: () => {
+            showToast("Account created successfully!", "success");
             setSubmitting(false);
-        }
+            setTimeout(() => router.replace("/login"), 900);
+          },
+        })
+      )
+        .unwrap()
+        .catch((err) => {
+          setSubmitting(false);
+          const msg =
+            err?.response?.data?.error?.message ||
+            "Registration failed. Try again.";
+          showToast(msg, "error");
+        });
+    } catch (err) {
+      setSubmitting(false);
+      showToast("Unexpected error occurred.", "error");
     }
+  };
 
-    return (
-        <Box className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-            <Box
-                sx={{
-                    width: "100%",
-                    maxWidth: 420,
-                    bgcolor: "white",
-                    borderRadius: 2,
-                    boxShadow: 3,
-                    p: 4,
-                }}
-            >
-                <Typography variant="h5" component="h1" sx={{ mb: 2, textAlign: "center" }}>
-                    Create your account
-                </Typography>
+  return (
+    <>
+      <Box className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <Box
+          sx={{
+            width: "100%",
+            maxWidth: 420,
+            bgcolor: "white",
+            borderRadius: 2,
+            boxShadow: 3,
+            p: 4,
+          }}
+        >
+          <Typography variant="h5" sx={{ mb: 2, textAlign: "center" }}>
+            Create your account
+          </Typography>
 
-                <Formik
-                    initialValues={initialValues}
-                    validationSchema={validationSchema}
-                    onSubmit={handleSubmit}
+          <Formik
+            initialValues={initialValues}
+            validationSchema={validationSchema}
+            onSubmit={handleSubmit}
+          >
+            {({
+              values,
+              errors,
+              touched,
+              handleChange,
+              handleBlur,
+              handleSubmit,
+              isSubmitting,
+            }) => (
+              <form onSubmit={handleSubmit} noValidate>
+                <TextField
+                  name="email"
+                  label="Email"
+                  fullWidth
+                  value={values.email}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  margin="normal"
+                  error={touched.email && Boolean(errors.email)}
+                  helperText={touched.email && errors.email}
+                />
+
+                <TextField
+                  name="password"
+                  label="Password"
+                  type="password"
+                  fullWidth
+                  value={values.password}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  margin="normal"
+                  error={touched.password && Boolean(errors.password)}
+                  helperText={touched.password && errors.password}
+                />
+
+                <TextField
+                  name="confirmPassword"
+                  label="Confirm Password"
+                  type="password"
+                  fullWidth
+                  value={values.confirmPassword}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  margin="normal"
+                  error={
+                    touched.confirmPassword && Boolean(errors.confirmPassword)
+                  }
+                  helperText={
+                    touched.confirmPassword && errors.confirmPassword
+                  }
+                />
+
+                <Box
+                  sx={{
+                    mt: 2,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
                 >
-                    {({ values, errors, touched, handleChange, handleBlur, handleSubmit, isSubmitting }) => (
-                        <form onSubmit={handleSubmit} noValidate>
-                            <TextField
-                                name="email"
-                                label="Email"
-                                fullWidth
-                                value={values.email}
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                margin="normal"
-                                error={touched.email && Boolean(errors.email)}
-                                helperText={touched.email && errors.email ? errors.email : ""}
-                            />
+                  <Button type="submit" variant="contained" disabled={isSubmitting}>
+                    {isSubmitting ? <CircularProgress size={20} /> : "Register"}
+                  </Button>
 
-                            <TextField
-                                name="password"
-                                label="Password"
-                                type="password"
-                                fullWidth
-                                value={values.password}
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                margin="normal"
-                                error={touched.password && Boolean(errors.password)}
-                                helperText={touched.password && errors.password ? errors.password : ""}
-                            />
-
-                            <TextField
-                                name="confirmPassword"
-                                label="Confirm Password"
-                                type="password"
-                                fullWidth
-                                value={values.confirmPassword}
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                margin="normal"
-                                error={touched.confirmPassword && Boolean(errors.confirmPassword)}
-                                helperText={
-                                    touched.confirmPassword && errors.confirmPassword ? errors.confirmPassword : ""
-                                }
-                            />
-
-                            <Box sx={{ mt: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                <Button
-                                    type="submit"
-                                    variant="contained"
-                                    disabled={isSubmitting}
-                                    sx={{ px: 3 }}
-                                >
-                                    {isSubmitting ? <CircularProgress size={20} /> : "Register"}
-                                </Button>
-
-                                <Typography variant="body2">
-                                    Already have an account?{" "}
-                                    <Link href="/login" className="text-blue-600 underline">
-                                        Login
-                                    </Link>
-                                </Typography>
-                            </Box>
-                        </form>
-                    )}
-                </Formik>
-            </Box>
+                  <Typography variant="body2">
+                    Already have an account?{" "}
+                    <Link href="/login" className="text-blue-600 underline">
+                      Login
+                    </Link>
+                  </Typography>
+                </Box>
+              </form>
+            )}
+          </Formik>
         </Box>
-    );
+      </Box>
+
+      {/* Snackbar Notification */}
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={3000}
+        onClose={() => setToast({ ...toast, open: false })}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          severity={toast.type}
+          variant="filled"
+          onClose={() => setToast({ ...toast, open: false })}
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
+    </>
+  );
 }

@@ -8,16 +8,29 @@ import AddTaskModal from "@/components/AddTaskModal";
 import TaskCard from "@/components/TaskCard";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
+import { useToast } from "@/context/ToastContext";
 
 export default function ProjectDetailsPage() {
   const { id: projectId } = useParams();
   const dispatch = useDispatch();
   const { items, loading } = useSelector((state) => state.tasks);
-
   const [openModal, setOpenModal] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
-    dispatch(fetchTasks({ projectId }));
+    dispatch(fetchTasks({ projectId }))
+      .unwrap()
+      .then(() => {
+        // showToast("Tasks loaded successfully", "success");
+      })
+      .catch((err) => {
+        const msg =
+          err?.error ||
+          err?.message ||
+          "Failed to load tasks. Please try again.";
+
+        showToast(msg, "error");
+      });
   }, [dispatch, projectId]);
 
   return (

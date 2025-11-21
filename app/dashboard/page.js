@@ -1,65 +1,70 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchProjects } from "@/store/slices/projectSlice";
+import Link from "next/link";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import { useToast } from "@/context/ToastContext";
+import AddProjectModal from "./projects/components/AddProjectModal";
 
-const Dashboard = () => {
-  const [stats, setStats] = useState({
-    projectsCount: 0,
-    tasksCount: 0,
-  });
-
-  const [loading, setLoading] = useState(true);
+export default function Projects() {
+  const dispatch = useDispatch();
+  const { items, loading } = useSelector((state) => state.projects);
+  const [openModal, setOpenModal] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
-    async function fetchStats() {
-      try {
-        const res = await fetch("/api/dashboard/stats", {
-          method: "GET",
-          credentials: "include",
-        });
+    dispatch(fetchProjects())
+      .unwrap()
+      .then(() => {
+        // showToast("Projects loaded successfully!", "success");
+      })
+      .catch((err) => {
+        const msg =
+          err?.error ||
+          err?.message ||
+          "Failed to load projects. Please try again.";
 
-        const data = await res.json();
-
-        if (res.ok) {
-          setStats({
-            projectsCount: data.projectsCount,
-            tasksCount: data.tasksCount,
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching dashboard stats:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchStats();
-  }, []);
-
-  if (loading) {
-    return <p className="text-gray-500">Loading dashboard...</p>;
-  }
+        showToast(msg, "error");
+      });
+  }, [dispatch]);
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-4">Welcome to the Dashboard</h2>
-      <p className="text-gray-600 mb-6">
-        Use the sidebar to manage projects and tasks.
-      </p>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-xl font-semibold">Projects</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-6 bg-white rounded-lg shadow border">
-          <h3 className="text-lg font-medium">Total Projects</h3>
-          <p className="text-3xl font-bold mt-2">{stats.projectsCount}</p>
-        </div>
-
-        <div className="p-6 bg-white rounded-lg shadow border">
-          <h3 className="text-lg font-medium">Total Tasks</h3>
-          <p className="text-3xl font-bold mt-2">{stats.tasksCount}</p>
-        </div>
+        <Button variant="contained" onClick={() => setOpenModal(true)}>
+          + Add Project
+        </Button>
       </div>
+
+      {loading ? (
+        <div className="flex justify-center my-10">
+          <CircularProgress />
+        </div>
+      ) : items.length === 0 ? (
+        <p className="text-gray-500 text-center">No projects found.</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {items.map((project) => (
+            <Link
+              href={`/dashboard/projects/${project.id}`}
+              key={project.id}
+              className="p-4 bg-white rounded-lg shadow hover:shadow-md transition cursor-pointer"
+            >
+              <h3 className="text-lg font-semibold">{project.name}</h3>
+              <p className="text-gray-600 text-sm mt-1">
+                {project.description || "No description"}
+              </p>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      <AddProjectModal open={openModal} onClose={() => setOpenModal(false)} />
     </div>
   );
-};
-
-export default Dashboard;
+}

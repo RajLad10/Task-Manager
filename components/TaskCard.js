@@ -5,9 +5,11 @@ import { useDispatch } from "react-redux";
 import { updateTaskStatus, deleteTask } from "@/store/slices/taskSlice";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
+import { useToast } from "@/context/ToastContext";
 
 export default function TaskCard({ task }) {
   const dispatch = useDispatch();
+  const { showToast } = useToast();
 
   const handleStatusChange = (e) => {
     dispatch(
@@ -15,11 +17,29 @@ export default function TaskCard({ task }) {
         taskId: task.id,
         status: e.target.value,
       })
-    );
+    )
+      .unwrap()
+      .then(() => showToast("Task status updated!", "success"))
+      .catch((err) => {
+        const msg =
+          err?.error ||
+          err?.message ||
+          "Failed to update task status.";
+        showToast(msg, "error");
+      });
   };
 
   const remove = () => {
-    dispatch(deleteTask({ taskId: task.id }));
+    dispatch(deleteTask({ taskId: task.id }))
+      .unwrap()
+      .then(() => showToast("Task deleted successfully!", "success"))
+      .catch((err) => {
+        const msg =
+          err?.error ||
+          err?.message ||
+          "Failed to delete task.";
+        showToast(msg, "error");
+      });
   };
 
   return (
@@ -27,10 +47,7 @@ export default function TaskCard({ task }) {
       <div className="flex justify-between items-start">
         <h3 className="font-semibold">{task.title}</h3>
 
-        <button
-          onClick={remove}
-          className="text-red-500 hover:text-red-700"
-        >
+        <button onClick={remove} className="text-red-500 hover:text-red-700">
           <DeleteIcon fontSize="small" />
         </button>
       </div>

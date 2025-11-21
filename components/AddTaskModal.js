@@ -7,15 +7,15 @@ import DialogActions from "@mui/material/DialogActions";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
-
 import { Formik } from "formik";
 import * as Yup from "yup";
-
 import { useDispatch } from "react-redux";
 import { createTask } from "@/store/slices/taskSlice";
+import { useToast } from "@/context/ToastContext";
 
 export default function AddTaskModal({ open, onClose, projectId }) {
   const dispatch = useDispatch();
+  const { showToast } = useToast();
 
   const initialValues = {
     title: "",
@@ -28,18 +28,26 @@ export default function AddTaskModal({ open, onClose, projectId }) {
   });
 
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
-    await dispatch(
-      createTask({
-        payload: {
-          ...values,
-          projectId,
-        },
-      })
-    );
+    try {
+      const result = await dispatch(
+        createTask({
+          payload: { ...values, projectId },
+        })
+      ).unwrap();
 
-    setSubmitting(false);
-    resetForm();
-    onClose();
+      // showToast("Task created successfully!", "success");
+      setSubmitting(false);
+      resetForm();
+      onClose();
+    } catch (err) {
+      const msg =
+        err?.error ||
+        err?.message ||
+        "Failed to create task. Please try again.";
+
+      showToast(msg, "error");
+      setSubmitting(false);
+    }
   };
 
   return (
