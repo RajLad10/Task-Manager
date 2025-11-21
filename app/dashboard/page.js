@@ -34,7 +34,7 @@ export default function Projects() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-xl font-semibold">Projects</h1>
+        <h1 className="text-xl font-semibold">Dashboard</h1>
 
         <Button variant="contained" onClick={() => setOpenModal(true)}>
           + Add Project
